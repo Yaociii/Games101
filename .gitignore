@@ -1,0 +1,53 @@
+# Visual Studio 生成文件
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.ide
+*.vcxproj.user
+*.vcxproj.filters
+
+# 编译输出目录
+bin/
+obj/
+x64/
+x86/
+ARM64/
+Debug/
+Release/
+AnyCPU/
+
+# .NET / C#
+*.pdb
+*.log
+*.cache
+*.tmp
+
+# C++
+*.ilk
+*.obj
+*.pch
+*.exp
+*.lib
+*.dll
+*.exe
+*.iobj
+*.ipdb
+
+# NuGet 包
+packages/
+*.nupkg
+
+# 单元测试
+TestResults/
+
+# 本地配置
+appsettings.Development.json
+*.local
+
+# 其他杂项
+*.bak
+*.swp
+.DS_Store
+Thumbs.db

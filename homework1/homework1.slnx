@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="homework1.vcxproj" Id="dd0b9622-ca6d-4494-be9a-9baeed4b19d0" />
+</Solution>
