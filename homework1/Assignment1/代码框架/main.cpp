@@ -56,6 +56,8 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     // TODO: Implement this function
     // Create the projection matrix for the given parameters.
     // Then return it.
+
+    //由于实际传入的zNear与zFar为正值，在后续计算中需乘-1
     float width,height;
     height = 2 * zNear * std::tan(0.5 * eye_fov * MY_PI / 180.0);
     width = height * aspect_ratio;
@@ -63,13 +65,13 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     Eigen::Matrix4f proToOrt = Eigen::Matrix4f::Identity();
     Eigen::Matrix4f ort = Eigen::Matrix4f::Identity();
 
-    proToOrt << zNear, 0, 0, 0,
-        0, zNear, 0, 0,
-        0, 0, zNear + zFar, -1 * zNear * zFar,
+    proToOrt << -1*zNear, 0, 0, 0,
+        0, -1*zNear, 0, 0,
+        0, 0, -1*(zNear + zFar), -1 * zNear * zFar,
         0, 0, 1, 0;
     ort << 2 / width, 0, 0, 0,
         0, 2 / height, 0, 0,
-        0, 0, 2 / (zNear - zFar), -1 * (zNear + zFar) / (zNear-zFar),
+        0, 0, 2 / (zFar-zNear), -1 * (zNear + zFar) / (zNear-zFar),
         0, 0, 0, 1;
 
     projection = ort * proToOrt;
