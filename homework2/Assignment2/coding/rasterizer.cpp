@@ -40,7 +40,10 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 }
 
 
-static bool insideTriangle(int x, int y, const Vector3f* _v)
+//将x,y的类型改为float以便传入中心点坐标及后续SSAA的实现
+
+
+static bool insideTriangle(float x, float y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
     //先定义好受检点、三角形的边、受检点与顶点连线
@@ -124,8 +127,8 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
 void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     auto v = t.toVector4();//返回顶点数组
     
-    // TODO : Find out the bounding box of current triangle.
-    // iterate through the pixel and find if the current pixel is inside the triangle
+     //TODO : Find out the bounding box of current triangle.
+     //iterate through the pixel and find if the current pixel is inside the triangle
     float xM=v[0].x(), xm=v[0].x(), yM=v[0].y(), ym=v[0].y();
     for (int i = 1; i < 3; i++)
     {
@@ -135,13 +138,27 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
         ym = std::min(ym, v[i].y());
     }
     Eigen::Vector3f _v[3];
-    for (int i = 0; i < 3; i++) _v[i] = v[i].head<3>();
+
+   for (int i = 0; i < 3; i++) _v[i] = v[i].head<3>();
+   //
+   ////以下为基础实现
+   ////注意计算时均需使用中心点坐标 
     for (int x = xm; x <= xM; x++)
         for (int y = ym; y <= yM; y++)
         {
-            if (insideTriangle(x, y, _v))
+
+            // If so, use the following code to get the interpolated z value.
+   auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
+   float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+   float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+   z_interpolated *= w_reciprocal;
+
+   // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
+
+
+            if (insideTriangle((float)x+0.5, (float)y+0.5, _v))
             {
-                auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
+                auto[alpha, beta, gamma] = computeBarycentric2D((float)x+0.5, (float)y+0.5, t.v);
                 float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
                 float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
                 z_interpolated *= w_reciprocal;
@@ -155,13 +172,44 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
             }
         }
  
-    // If so, use the following code to get the interpolated z value.
-    //auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
-    //float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-    //float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-    //z_interpolated *= w_reciprocal;
+  
 
-    // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
+    // 提高项：SSAA的实现
+    //思路：将每个像素拆分为4个进行检验，对于像素内的每一个样本都需要维护它自己的深度值，即每一个像素都需要维护一个 sample list
+   //最终颜色应有四个样本平均得出,为此还需维护每个样本的颜色
+
+   //for(int x=xm;x<=xM;x++)
+   //    for (int y = ym; y <= yM; y++)
+   //    {
+   //        int ind = get_index(x, y);
+   //        int i = 0;
+   //        for(float dx=0.25;dx<=1;dx+=0.5)
+   //            for (float dy = 0.25; dy <=1; dy+=0.5,i++)
+   //            {
+   //                float px = (float)x + dx;
+   //                float py = (float)y + dy;
+   //                if (insideTriangle(px, py, _v))
+   //                {
+   //                    auto[alpha, beta, gamma] = computeBarycentric2D(px, py, t.v);
+   //                    float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+   //                    float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+   //                    z_interpolated *= w_reciprocal;
+   //                    if (z_interpolated > this->ssaa_depth_buf[ind][i])
+   //                    {
+   //                        this->ssaa_depth_buf[ind][i] = z_interpolated;
+   //                        this->ssaa_frame_buf[ind][i] = t.getColor();
+   //                    }
+   //                    //最终平均得到颜色
+   //                    if (i == 3)
+   //                    {
+   //                        this->frame_buf[ind] = ssaa_frame_buf[ind][0] + ssaa_frame_buf[ind][1] + ssaa_frame_buf[ind][2] + ssaa_frame_buf[ind][3];
+   //                        this->frame_buf[ind] /= 4;
+   //                    }
+   //                }
+   //            }
+
+   //       
+   //    }
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
@@ -184,10 +232,16 @@ void rst::rasterizer::clear(rst::Buffers buff)
     if ((buff & rst::Buffers::Color) == rst::Buffers::Color)
     {
         std::fill(frame_buf.begin(), frame_buf.end(), Eigen::Vector3f{0, 0, 0});
+        for (auto& row :this-> ssaa_frame_buf)
+            std::fill(row.begin(), row.end(), Eigen::Vector3f{ 0,0,0 });
     }
     if ((buff & rst::Buffers::Depth) == rst::Buffers::Depth)
     {
+        //初始化改为负无穷以使用负数深度值进行比较
+
         std::fill(depth_buf.begin(), depth_buf.end(), -std::numeric_limits<float>::infinity());
+        for (auto& row : this->ssaa_depth_buf)
+            std::fill(row.begin(), row.end(), -std::numeric_limits<float>::infinity());
     }
 }
 
@@ -195,6 +249,12 @@ rst::rasterizer::rasterizer(int w, int h) : width(w), height(h)
 {
     frame_buf.resize(w * h);
     depth_buf.resize(w * h);
+    this->ssaa_frame_buf.resize(w * h);
+    for (auto& row : this->ssaa_frame_buf)
+        row.resize(4, Eigen::Vector3f{ 0,0,0 });
+    this->ssaa_depth_buf.resize(w * h);
+    for (auto& row : this->ssaa_depth_buf)
+        row.resize(4, -std::numeric_limits<float>::infinity());
 }
 
 int rst::rasterizer::get_index(int x, int y)
@@ -210,4 +270,3 @@ void rst::rasterizer::set_pixel(const Eigen::Vector3f& point, const Eigen::Vecto
 
 }
 
-// clang-format on

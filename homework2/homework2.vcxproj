@@ -143,14 +143,14 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Assignment2\代码框架\global.hpp" />
-    <ClInclude Include="Assignment2\代码框架\rasterizer.hpp" />
-    <ClInclude Include="Assignment2\代码框架\Triangle.hpp" />
+    <ClInclude Include="Assignment2\coding\global.hpp" />
+    <ClInclude Include="Assignment2\coding\rasterizer.hpp" />
+    <ClInclude Include="Assignment2\coding\Triangle.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Assignment2\代码框架\main.cpp" />
-    <ClCompile Include="Assignment2\代码框架\rasterizer.cpp" />
-    <ClCompile Include="Assignment2\代码框架\Triangle.cpp" />
+    <ClCompile Include="Assignment2\coding\main.cpp" />
+    <ClCompile Include="Assignment2\coding\rasterizer.cpp" />
+    <ClCompile Include="Assignment2\coding\Triangle.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -93,6 +93,12 @@ namespace rst
         std::vector<Eigen::Vector3f> frame_buf;
 
         std::vector<float> depth_buf;
+
+        //为实现SSAA新增属性
+
+        std::vector<std::vector<float>> ssaa_depth_buf;
+        std::vector<std::vector<Eigen::Vector3f>> ssaa_frame_buf;
+
         int get_index(int x, int y);
 
         int width, height;
